@@ -1,0 +1,69 @@
+<Configuration>
+  <Name>Sierra ILS Data Import Server Addon</Name>
+  <Author>Atlas Systems, Inc.</Author>
+  <Version>1.0.0</Version>
+  <Active>true</Active>
+  <Type>Server</Type>
+
+  <Description>Imports ILS data from Sierra's Items API for transactions that are in the specified data import queue.</Description>
+
+  <Settings>
+    <Setting name="RequestMonitorQueue" type="string" value="Awaiting ILS Data Import">
+      <Description>The queue that the addon will monitor for transactions that need ILS data automatically imported from Sierra. The value of this setting is required.</Description>
+    </Setting>
+
+    <Setting name="SuccessRouteQueue" type="string" value="Awaiting Request Processing">
+      <Description>The queue that the addon will route requests to after successfully importing ILS data from Sierra. The value of this setting is required.</Description>
+    </Setting>
+    
+    <Setting name="ErrorRouteQueue" type="string" value="Awaiting Manual Data Import">
+      <Description>The queue that the addon will route requests to if errors are encountered while importing ILS data from Sierra. The value of this setting is required.</Description>
+    </Setting>
+
+
+    <Setting name="SierraApiUrl" type="string" value="https://sandbox.iii.com/iii/sierra-api/v3/">
+      <Description>Base URL for the Sierra API. The value of this setting is required.</Description>
+    </Setting>
+
+    <Setting name="ClientKey" type="string" value="">
+      <Description>Client Key used for authorization for the Sierra API. The value of this setting is required.</Description>
+    </Setting>
+
+    <Setting name="ClientSecret" type="string" value="">
+      <Description>Client Secret used for authorization for the Sierra API. The value of this setting is required.</Description>
+    </Setting>
+
+    <Setting name="UserAgent" type="string" value="Client - Aeon">
+      <Description>Specifies the User-Agent that is sent to Sierra with API requests. The value of this setting is optional.</Description>
+    </Setting>
+
+
+    <Setting name="BibIdSourceField" type="string" value="ItemInfo3">
+      <Description>Specifies the transaction field that contains the Sierra record's BibID. This setting will be used along with the VolumeSourceField setting to gather item data from Sierra's item API. The value of this setting is required and must match the name of a column from the Transactions table.</Description>
+    </Setting>
+
+    <Setting name="VolumeSourceField" type="string" value="CallNumber">
+      <Description>Specifies the transaction field that contains the Sierra record's Volume. This setting will be used along with the BibIdSourceField setting to gather item data from Sierra's item API. The transaction field specified in this setting may contain additional information that is not related to the item's volume. The value of this setting is required and must match the name of a column from the Transactions table.  </Description>
+    </Setting>
+
+
+    <Setting name="CleanUpVolumeSourceField" type="boolean" value="false">
+      <Description>Specifies whether or not the Transaction's volume information should be removed from the specified VolumeSourceField. This is to help clean up transaction data in the event that the volume information was scraped from a webpage, where the volume information is conjoined with other data. The value of this setting is required and must be either "true" or "false".</Description>
+    </Setting>
+
+
+    <Setting name="VolumeDestinationField" type="string" value="ItemVolume">
+      <Description>Specifies the transaction field where the volume information for the transaction should be stored. The value of this setting is optional. If specified, the value of this setting must match the name of a column from the Transactions table.</Description>
+    </Setting>
+
+    <Setting name="BarcodeDestinationField" type="string" value="ItemEdition">
+      <Description>Specifies the transaction field where gathered barcode information should be stored. The value of this setting is optional. If specified, the value of this setting must match the name of a column from the Transactions table.</Description>
+    </Setting>
+
+  </Settings>
+
+  <Forms />
+
+  <Files />
+
+</Configuration>
