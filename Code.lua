@@ -43,7 +43,7 @@ JsonParser.Log = luanet.import_type("log4net.LogManager").GetLogger(JsonParser.r
 
 function JsonParser:ParseJSON (jsonString)
     --[[
-        Parses an input JSON string and outputs a 
+        Parses an input JSON string and outputs a
         lua table representation of the contained
         JSON data. JSON properties that contain
         null will be represented as JsonParser.NIL.
@@ -80,13 +80,13 @@ function JsonParser:BuildFromJsonObject (reader)
     ]]
 
     local array = {}
-    
+
     while (reader:Read()) do
-        
+
         if (reader.TokenType == JsonParser.Types["JsonToken"].EndObject) then 
             return array
         end
-        
+
         if (reader.TokenType == JsonParser.Types["JsonToken"].PropertyName) then
             local propertyName = reader.Value
 
@@ -118,7 +118,7 @@ function JsonParser:BuildFromJsonArray (reader)
     ]]
 
     local array = {}
-    
+
     while (reader:Read()) do
 
         if (reader.TokenType == JsonParser.Types["JsonToken"].EndArray) then
@@ -136,6 +136,23 @@ function JsonParser:BuildFromJsonArray (reader)
 
     return array
 end
+
+--[[
+Utilities
+
+Usage:
+    This section contains useful functions for
+    the rest of the solution
+
+]]
+
+Utility = {}
+Utility.__index = Utility
+
+function Utility.Trim(s)
+    return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
 --[[
 SierraApi.lua
 
@@ -176,13 +193,13 @@ SierraApi.UrlSuffixes.ItemsQueryItemFields = "?fields=default,fixedFields,varFie
 SierraApi.UrlSuffixes.ItemsBibIds = "/items?bibIds=%s&fields=default,fixedFields,varFields"
 
 
-SierraApi.ApiEndpoints = { 
+SierraApi.ApiEndpoints = {
     --[[
         Enumeration for determining
         the API that was used when
         formatting error messages.
 
-        API endpoints that are not 
+        API endpoints that are not
         yet needed have not been
         added.
     ]]
@@ -261,13 +278,13 @@ function SierraApi:GetAccessTokenResponse (clientKey, clientSecret)
             expires_in = <int>
         }
     ]]
-    
+
     if (not type(clientKey) == "string") or clientKey == "" then
         error({ Message = "Client Key must be a non-empty string." })
-    
+
     elseif (not type(clientSecret) == "string") or clientSecret == "" then
         error({ Message = "Client Secret must be a non-empty string." })
-    
+
     end
 
 
@@ -304,7 +321,7 @@ function SierraApi:GetAccessTokenResponse (clientKey, clientSecret)
     local parsedAuthResult = JsonParser:ParseJSON(authUploadResult)
 
     if parsedAuthResult.code and not parsedAuthResult.access_token then
-        
+
         local message = "Bad authorization result returned from Sierra authorization."
 
         SierraApi.Log:Warn(message)
@@ -325,22 +342,36 @@ function SierraApi:GetAccessTokenResponse (clientKey, clientSecret)
     return parsedAuthResult 
 end
 
-
 function SierraApi:GetItems (bibId, volume)
-    --[[
+        --[[
         Uses Sierra's /items API to get all of
         the items that match the specified bibId 
         and volume.
 
         Requires a bibId, and a volume.
+        ]]
+    return SierraApi:GetItems (bibId, volume, false)
+end
+
+function SierraApi:GetItems (bibId, volume, exact)
+    --[[
+        Uses Sierra's /items API to get all of
+        the items that match the specified bibId
+        and volume.
+
+        Requires a bibId, and a volume.
+
+        exact is a boolean value that will determine whether
+        or not to match the string exactly.
 
         Note:
             This method will check each item that was
             returned for the specified bibId to see if
             that item has a volume and if the volume is
-            a substring of the given volume, to support
-            sites that have volume information
-            concatenated with other information.
+            1) a substring of the given volume if exact
+            is false to support sites that have volume
+            information concatenated with other information,
+            or 2) an exact trimmed string.
     ]]
 
     if (not type(bibId) == "string") or bibId == "" then
@@ -348,7 +379,7 @@ function SierraApi:GetItems (bibId, volume)
 
     elseif (not type(volume) == "string") or volume == "" then
         error({ Message = "volume must be a non-empty string" })
-    
+
     end
 
 
@@ -382,9 +413,16 @@ function SierraApi:GetItems (bibId, volume)
         local v_volume = SierraApi:GetVarFieldValue(v_entry, "v")
 
         if v_volume and v_volume ~= "" then
-            if string.find(volume, v_volume, 1, true) then
-                SierraApi.Log:DebugFormat("Sierra item record \"{0}\" matches specified bibId and volume.", entryId)
-                table.insert(matchingItems, v_entry)
+            if exact or false then
+                if string.find(volume, v_volume, 1, true) then
+                    SierraApi.Log:DebugFormat("Sierra item record \"{0}\" matches specified bibId and volume (substring).", entryId)
+                    table.insert(matchingItems, v_entry)
+                end
+            else
+                if Utility.Trim(volume) == Utility.Trim(v_volume) then
+                    SierraApi.Log:DebugFormat("Sierra item record \"{0}\" matches specified bibId and volume (exact).", entryId)
+                    table.insert(matchingItems, v_entry)
+                end
             end
         end
     end
@@ -403,12 +441,12 @@ function SierraApi:QueryItems (bibId, volume)
         the items that match the specified bibId 
         and volume.
 
-        Requires a bibId and a volume.        
+        Requires a bibId and a volume.
     ]]
 
     if (not type(bibId) == "string") or bibId == "" then 
         error({ Message = "bibId must be a non-empty string" })
-    
+
     elseif (not type(volume) == "string") or volume == "" then
         error({ Message = "volume must be non-empty string" })
 
@@ -453,16 +491,16 @@ function SierraApi:QueryItems (bibId, volume)
         SierraApi.Log:Error("Unsuccessful Query API call")
         SierraApi:HandleUploadError(queryUploadResult, SierraApi.ApiEndpoints.itemsQuery)
     end
-    
+
     SierraApi.Log:DebugFormat("Response: {0}", queryUploadResult)
     local queryResponse = JsonParser:ParseJSON(queryUploadResult)
-    
+
     SierraApi.Log:DebugFormat(
         "Number of entries: {0}", 
         queryResponse.total or 
         table.getn(queryResponse.entries) or 
         -1)
-    
+
     matchingItems = {}
 
     -- Adds each entry to the matchingItems output
@@ -480,7 +518,7 @@ function SierraApi:QueryItems (bibId, volume)
                 local webClient = self:BuildItemsWebClient()
                 return webClient:DownloadString(link)
             end)
-            
+
             if not itemsApiSuccess then
                 SierraApi.Log:ErrorFormat("Unsuccessful Items API call using URL: {0}", link)
                 SierraApi:HandleUploadError(itemsApiResult, SierraApi.ApiEndpoints.items)
@@ -507,7 +545,7 @@ function SierraApi:GetVarFieldValue (itemRecord, varField, subField)
         the varField's subField if a subField tag
         is supplied and is present in the item
         record.
-        
+
         subField is not required.
 
         Returns single values.
@@ -518,13 +556,13 @@ function SierraApi:GetVarFieldValue (itemRecord, varField, subField)
 
     if not type(varField) == "string" then
         error({ Message = "varField argument must be a string" })
-    
+
     elseif not itemRecord then
         error({ Message = "Sierra item record cannot be nil or false" })
 
     elseif not itemRecord.varFields then
         error({ Message =  "Sierra item record does not contain varFields" })
-    
+
     end
 
 
@@ -611,7 +649,7 @@ function SierraApi:GetVarFieldMarcData (itemRecord, varField)
 
     elseif not itemRecord.varFields then
         error({ Message = "Item record does not contain varFields" })
-    
+
     end
 
 
@@ -621,9 +659,9 @@ function SierraApi:GetVarFieldMarcData (itemRecord, varField)
         if v_varField and v_varField.fieldTag == varField then
 
             SierraApi.Log:DebugFormat(
-                "Found varField \"{0}\" for item record \"{1}\". Returning its MARC data.", 
+                "Found varField \"{0}\" for item record \"{1}\". Returning its MARC data.",
                 varField, itemRecordId)
-            
+
             return {
                 marcTag = v_varField.marcTag,
                 ind1 = v_varField.ind1,
@@ -633,7 +671,7 @@ function SierraApi:GetVarFieldMarcData (itemRecord, varField)
     end
 
     SierraApi.Log:DebugFormat(
-        "Could not find varField \"{0}\" under item record \"{1}\".", 
+        "Could not find varField \"{0}\" under item record \"{1}\".",
         varField, itemRecordId)
 
     return nil
@@ -654,7 +692,7 @@ function SierraApi:GetFixedField (itemRecord, fixedField)
         {
             label = "LANG",
             value = "eng",
-            display = "English")
+            display = "English"
         }
     ]]
 
@@ -666,9 +704,9 @@ function SierraApi:GetFixedField (itemRecord, fixedField)
 
     elseif not itemRecord.fixedFields then
         error({ Message = "Item record does not contain fixedFields" })
-    
+
     end
-    
+
 
     if not itemRecord.fixedFields[fixedField] then
         SierraApi.Log:WarnFormat(
@@ -732,7 +770,7 @@ function SierraApi:HandleUploadError (returnedError, apiEndpoint)
 					local responseString = responseStreamReader:ReadToEnd();
 					if responseString then
                         SierraApi.Log:DebugFormat("Response: {0}", responseString)
- 
+
                         local errorMessageOpener = "A call to the Sierra API returned an error."
 
                         if apiEndpoint == SierraApi.ApiEndpoints.info then
@@ -754,14 +792,14 @@ function SierraApi:HandleUploadError (returnedError, apiEndpoint)
 
         -- If the parsing of the response failed:
         returnedError = returnedError.InnerException
-    
+
     elseif SierraApi:IsType(returnedError, "LuaInterface.LuaScriptException") and returnedError.InnerException and SierraApi:IsType(returnedError.InnerException, "System.Net.Sockets.SocketException") then
-        
+
         SierraApi.Log:Debug("Handling error encountered with web socket")
 		SierraApi.Log:Debug("HTTP Error: " .. returnedError.InnerException.Message)
 
         returnedError = returnedError.InnerException
-        
+
     elseif type(returnedError) == "string" and returnedError ~= "" then
         returnedError = { Message = returnedError }
 
@@ -769,7 +807,7 @@ function SierraApi:HandleUploadError (returnedError, apiEndpoint)
         returnedError.Message = "A .NET exception occurred while interacting with the Sierra API." 
 
     end
-    
+
     error(returnedError)
 end
 
@@ -812,7 +850,7 @@ end
 
 
 function SierraApi:Base64Encode (plainText)
-    --[[ 
+    --[[
         Encodes the input text in base64.
     ]]
 
@@ -874,6 +912,9 @@ Settings.CleanUpVolumeSourceField = GetSetting("CleanUpVolumeSourceField")
 Settings.VolumeDestinationField = GetSetting("VolumeDestinationField")
 Settings.BarcodeDestinationField = GetSetting("BarcodeDestinationField")
 
+Settings.CallNumberFieldRegularExpression = GetSetting("CallNumberFieldRegularExpression")
+Settings.ExactSearch = GetSetting("ExactSearch")
+
 
 luanet.load_assembly("System")
 luanet.load_assembly("log4net")
@@ -887,6 +928,7 @@ Types["StreamReader"] = luanet.import_type("System.IO.StreamReader")
 Types["NameValueCollection"] = luanet.import_type("System.Collections.Specialized.NameValueCollection")
 Types["Encoding"] = luanet.import_type("System.Text.Encoding")
 Types["LogManager"] = luanet.import_type("log4net.LogManager")
+Types["Regex"] = luanet.import_type("System.Text.RegularExpressions.Regex")
 
 
 -- =========================================================
@@ -912,7 +954,7 @@ function TimerElapsed (eventArgs)
         system manager triggers server addon
         execution.
     ]]
-    
+
     if (not isCurrentlyProcessing) then
         isCurrentlyProcessing = true
 
@@ -926,7 +968,7 @@ function TimerElapsed (eventArgs)
                 if not sierraApi then
                     sierraApi = SierraApi:Create(Settings.SierraApiUrl)
                 end
-                
+
                 local accessToken = sierraApi:UpdateAccessToken(Settings.ClientKey, Settings.ClientSecret)
                 Log:DebugFormat("Generated Access Token: {0}", accessToken)
 
@@ -965,14 +1007,27 @@ function HandleRequests ()
     local tn = GetFieldValue("Transaction", "TransactionNumber")
     Log:DebugFormat("Found transaction number {0} in \"{1}\"", tn, Settings.RequestMonitorQueue)
 
+    local regex
+    if Settings.CallNumberFieldRegularExpression ~= nil or Settings.CallNumberFieldRegularExpression ~= "" then
+        regex = Types["Regex"](Settings.CallNumberFieldRegularExpression)
+    end
+
     local success, result = pcall(
         function()
-    
+
             local fieldFetchSuccess, transactionBibId, transactionVolume = pcall(
                 function()
                     local transactionBibId = GetFieldValue("Transaction", Settings.BibIdSourceField)
                     transactionBibId = transactionBibId:gsub("%D", "")
-                    local transactionVolume = GetFieldValue("Transaction", Settings.VolumeSourceField)
+                    local transactionVolume
+                    if regex ~= nil then
+                        match = regex:Match(GetFieldValue("Transaction", Settings.VolumeSourceField))
+                            if match.Success then
+                                transactionVolume = match.value
+                            end
+                    else
+                        transactionVolume = GetFieldValue("Transaction", Settings.VolumeSourceField)
+                    end
                     return transactionBibId, transactionVolume
                 end
             )
@@ -985,8 +1040,12 @@ function HandleRequests ()
             Log:DebugFormat("BibID : {0}", transactionBibId)
             Log:DebugFormat("Volume: {0}", transactionVolume)
             Log:Info("Searching for Sierra records.")
-
-            local sierraRecords = sierraApi:GetItems(transactionBibId, transactionVolume)
+            local sierraRecords
+            if Settings.ExactSearch then
+                sierraRecords = sierraApi:QueryItems(transactionBibId, transactionVolume)
+            else
+                sierraRecords = sierraApi:GetItems(transactionBibId, transactionVolume)
+            end
             local numRecords = table.getn(sierraRecords)
 
 
@@ -1002,15 +1061,14 @@ function HandleRequests ()
             local _, sierraRecord = next(sierraRecords, nil)
             local sierraRecordVolume = SierraApi:GetVarFieldValue(sierraRecord, "v")
 
-
             if Settings.CleanUpVolumeSourceField then
                 local volStartIndex, volEndIndex = 
                     transactionVolume:find(sierraRecordVolume, 1, true)
-                
+
                 local nextTransactionVol = 
                     transactionVolume:sub(1, volStartIndex - 1) ..
                     transactionVolume:sub(volEndIndex + 1)
-                
+
                 Log:DebugFormat(
                     "Cleaning up VolumeSourceField. (Before: \"{0}\") (After: \"{1}\")", 
                     transactionVolume, 
@@ -1023,7 +1081,7 @@ function HandleRequests ()
 
             if Settings.VolumeDestinationField and Settings.VolumeDestinationField ~= "" then
                 Log:Debug("Populating volume destination field")
-                
+
                 SetFieldValue("Transaction", Settings.VolumeDestinationField, sierraRecordVolume)
                 SaveDataSource("Transaction")
             end
@@ -1048,7 +1106,7 @@ function HandleRequests ()
         ExecuteCommand("Route", { tn, Settings.SuccessRouteQueue })
 
     else
-        Log:ErrorFormat("Failed to populate transaction {0} with data from Sierra. Routing transaction to \"{1}\".", tn, Settings.ErrorRouteQueue)        
+        Log:ErrorFormat("Failed to populate transaction {0} with data from Sierra. Routing transaction to \"{1}\".", tn, Settings.ErrorRouteQueue)
         Log:Error(result.Message or result)
         ExecuteCommand("AddNote", { tn, result.Message or result })
         ExecuteCommand("Route", { tn, Settings.ErrorRouteQueue })

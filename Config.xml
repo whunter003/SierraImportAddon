@@ -1,7 +1,7 @@
 <Configuration>
   <Name>Sierra ILS Data Import Server Addon</Name>
   <Author>Atlas Systems, Inc.</Author>
-  <Version>1.0.0</Version>
+  <Version>2.0.0</Version>
   <Active>true</Active>
   <Type>Server</Type>
 
@@ -20,7 +20,6 @@
       <Description>The queue that the addon will route requests to if errors are encountered while importing ILS data from Sierra. The value of this setting is required.</Description>
     </Setting>
 
-
     <Setting name="SierraApiUrl" type="string" value="https://sandbox.iii.com/iii/sierra-api/v3/">
       <Description>Base URL for the Sierra API. The value of this setting is required.</Description>
     </Setting>
@@ -37,7 +36,6 @@
       <Description>Specifies the User-Agent that is sent to Sierra with API requests. The value of this setting is optional.</Description>
     </Setting>
 
-
     <Setting name="BibIdSourceField" type="string" value="ItemInfo3">
       <Description>Specifies the transaction field that contains the Sierra record's BibID. This setting will be used along with the VolumeSourceField setting to gather item data from Sierra's item API. The value of this setting is required and must match the name of a column from the Transactions table.</Description>
     </Setting>
@@ -46,11 +44,9 @@
       <Description>Specifies the transaction field that contains the Sierra record's Volume. This setting will be used along with the BibIdSourceField setting to gather item data from Sierra's item API. The transaction field specified in this setting may contain additional information that is not related to the item's volume. The value of this setting is required and must match the name of a column from the Transactions table.  </Description>
     </Setting>
 
-
     <Setting name="CleanUpVolumeSourceField" type="boolean" value="false">
       <Description>Specifies whether or not the Transaction's volume information should be removed from the specified VolumeSourceField. This is to help clean up transaction data in the event that the volume information was scraped from a webpage, where the volume information is conjoined with other data. The value of this setting is required and must be either "true" or "false".</Description>
     </Setting>
-
 
     <Setting name="VolumeDestinationField" type="string" value="ItemVolume">
       <Description>Specifies the transaction field where the volume information for the transaction should be stored. The value of this setting is optional. If specified, the value of this setting must match the name of a column from the Transactions table.</Description>
@@ -59,6 +55,15 @@
     <Setting name="BarcodeDestinationField" type="string" value="ItemEdition">
       <Description>Specifies the transaction field where gathered barcode information should be stored. The value of this setting is optional. If specified, the value of this setting must match the name of a column from the Transactions table.</Description>
     </Setting>
+
+    <Setting name="ExactSearch" type="boolean" value="false">
+      <Description>Determines whether searching is exact (i.e., looks for an excact string match). If set to false, searching would rather rely on substring matching</Description>
+    </Setting>
+
+    <Setting name="CallNumberFieldRegularExpression" type="string" value="">
+      <Description>A regular expression for parsing the call number field for volume information. Do not use this feature by setting the value to nothing.</Description>
+    </Setting>
+
 
   </Settings>
 
