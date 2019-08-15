@@ -56,12 +56,16 @@
       <Description>Specifies the transaction field where gathered barcode information should be stored. The value of this setting is optional. If specified, the value of this setting must match the name of a column from the Transactions table.</Description>
     </Setting>
 
+    <Setting name="ReplaceVolumeWhenNotNull" type="boolean" value="false">
+      <Description>Determines if the specified volume destination field is replaced if here is already set information in the field.</Description>
+    </Setting>
+
     <Setting name="ExactSearch" type="boolean" value="false">
-      <Description>Determines whether searching is exact (i.e., looks for an excact string match). If set to false, searching would rather rely on substring matching</Description>
+      <Description>Determines whether searching is exact (i.e., looks for an exact string match). If set to false, searching would rather rely on substring matching</Description>
     </Setting>
 
     <Setting name="CallNumberFieldRegularExpression" type="string" value="">
-      <Description>A regular expression for parsing the call number field for volume information. Do not use this feature by setting the value to nothing.</Description>
+      <Description>A regular expression for parsing the call number field for volume information. If set to nothing, full string of field is used.</Description>
     </Setting>
 
 

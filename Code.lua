@@ -438,7 +438,7 @@ end
 function SierraApi:QueryItems (bibId, volume)
     --[[
         Uses Sierra's /items/query API to get all of
-        the items that match the specified bibId 
+        the items that match the specified bibId
         and volume.
 
         Requires a bibId and a volume.
@@ -710,8 +710,8 @@ function SierraApi:GetFixedField (itemRecord, fixedField)
 
     if not itemRecord.fixedFields[fixedField] then
         SierraApi.Log:WarnFormat(
-            "Item Record \"{0}\" does not contain fixedField \"{1}\"", 
-            itemRecord.id, 
+            "Item Record \"{0}\" does not contain fixedField \"{1}\"",
+            itemRecord.id,
             fixedField)
         return nil
     end
@@ -914,6 +914,7 @@ Settings.BarcodeDestinationField = GetSetting("BarcodeDestinationField")
 
 Settings.CallNumberFieldRegularExpression = GetSetting("CallNumberFieldRegularExpression")
 Settings.ExactSearch = GetSetting("ExactSearch")
+Settings.ReplaceVolumeWhenNotNull = GetSetting("ReplaceVolumeWhenNotNull")
 
 
 luanet.load_assembly("System")
@@ -1008,7 +1009,7 @@ function HandleRequests ()
     Log:DebugFormat("Found transaction number {0} in \"{1}\"", tn, Settings.RequestMonitorQueue)
 
     local regex
-    if Settings.CallNumberFieldRegularExpression ~= nil or Settings.CallNumberFieldRegularExpression ~= "" then
+    if Settings.CallNumberFieldRegularExpression and Settings.CallNumberFieldRegularExpression ~= "" then
         regex = Types["Regex"](Settings.CallNumberFieldRegularExpression)
     end
 
@@ -1023,7 +1024,7 @@ function HandleRequests ()
                     if regex ~= nil then
                         match = regex:Match(GetFieldValue("Transaction", Settings.VolumeSourceField))
                             if match.Success then
-                                transactionVolume = match.value
+                                transactionVolume = match.Value
                             end
                     else
                         transactionVolume = GetFieldValue("Transaction", Settings.VolumeSourceField)
@@ -1051,10 +1052,8 @@ function HandleRequests ()
 
             if numRecords <= 0 then
                 error({ Message = "No Sierra records were returned for the specified bibId and volume" })
-
             elseif numRecords > 1 then
                 error({ Message = "Too many Sierra records were returned for the specified bibId and volume" })
-
             end
 
 
@@ -1078,8 +1077,12 @@ function HandleRequests ()
                 SaveDataSource("Transaction")
             end
 
+            local currentVolumeDestinationField = GetFieldValue("Transaction", Settings.BibIdSourceField)
 
-            if Settings.VolumeDestinationField and Settings.VolumeDestinationField ~= "" then
+            if Settings.VolumeDestinationField
+                and Settings.VolumeDestinationField ~= ""
+                and (Settings.ReplaceVolumeWhenNotNull or (currentVolumeDestinationField and currentVolumeDestinationField ~= ""))
+                then
                 Log:Debug("Populating volume destination field")
 
                 SetFieldValue("Transaction", Settings.VolumeDestinationField, sierraRecordVolume)
