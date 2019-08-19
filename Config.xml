@@ -36,7 +36,7 @@
       <Description>Specifies the User-Agent that is sent to Sierra with API requests. The value of this setting is optional.</Description>
     </Setting>
 
-    <Setting name="BibIdSourceField" type="string" value="ItemInfo3">
+    <Setting name="BibIdSourceField" type="string" value="ItemNumber">
       <Description>Specifies the transaction field that contains the Sierra record's BibID. This setting will be used along with the VolumeSourceField setting to gather item data from Sierra's item API. The value of this setting is required and must match the name of a column from the Transactions table.</Description>
     </Setting>
 
@@ -60,19 +60,16 @@
       <Description>Determines if the specified volume destination field is replaced if here is already set information in the field.</Description>
     </Setting>
 
-    <Setting name="ExactSearch" type="boolean" value="false">
+    <Setting name="ExactSearch" type="boolean" value="true">
       <Description>Determines whether searching is exact (i.e., looks for an exact string match). If set to false, searching would rather rely on substring matching</Description>
     </Setting>
 
-    <Setting name="CallNumberFieldRegularExpression" type="string" value="">
+    <Setting name="CallNumberFieldRegularExpression" type="string" value="([B,b]ox\s*\d+)">
       <Description>A regular expression for parsing the call number field for volume information. If set to nothing, full string of field is used.</Description>
     </Setting>
-
-
   </Settings>
-
-  <Forms />
-
-  <Files />
+  <Files>
+    <File>code.lua</File>
+  </Files>
 
 </Configuration>

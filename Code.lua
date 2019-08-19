@@ -413,14 +413,14 @@ function SierraApi:GetItems (bibId, volume, exact)
         local v_volume = SierraApi:GetVarFieldValue(v_entry, "v")
 
         if v_volume and v_volume ~= "" then
-            if exact or false then
-                if string.find(volume, v_volume, 1, true) then
-                    SierraApi.Log:DebugFormat("Sierra item record \"{0}\" matches specified bibId and volume (substring).", entryId)
+            if exact then
+                if Utility.Trim(volume) == Utility.Trim(v_volume) then
+                    SierraApi.Log:DebugFormat("Sierra item record \"{0}\" matches specified bibId and volume (exact).", entryId)
                     table.insert(matchingItems, v_entry)
                 end
             else
-                if Utility.Trim(volume) == Utility.Trim(v_volume) then
-                    SierraApi.Log:DebugFormat("Sierra item record \"{0}\" matches specified bibId and volume (exact).", entryId)
+                if string.find(volume, v_volume, 1, true) then
+                    SierraApi.Log:DebugFormat("Sierra item record \"{0}\" matches specified bibId and volume (substring).", entryId)
                     table.insert(matchingItems, v_entry)
                 end
             end
@@ -1011,22 +1011,27 @@ function HandleRequests ()
     local regex
     if Settings.CallNumberFieldRegularExpression and Settings.CallNumberFieldRegularExpression ~= "" then
         regex = Types["Regex"](Settings.CallNumberFieldRegularExpression)
+        Log:DebugFormat("Found Regex \"{0}\" for VolumeSourceField.", Settings.CallNumberFieldRegularExpression)
+    else
+        Log:Debug("No Regex found.")
     end
 
     local success, result = pcall(
         function()
-
             local fieldFetchSuccess, transactionBibId, transactionVolume = pcall(
                 function()
+                    Log:DebugFormat("Getting BibID from transaction.{0}", Settings.BibIdSourceField)
                     local transactionBibId = GetFieldValue("Transaction", Settings.BibIdSourceField)
                     transactionBibId = transactionBibId:gsub("%D", "")
                     local transactionVolume
                     if regex ~= nil then
+                        Log:DebugFormat("Using Regex \"{0}\" for volume source field {1}", Settings.CallNumberFieldRegularExpression, Settings.VolumeSourceField)
                         match = regex:Match(GetFieldValue("Transaction", Settings.VolumeSourceField))
                             if match.Success then
                                 transactionVolume = match.Value
                             end
                     else
+                        Log:DebugFormat("Getting volume source field {1}", Settings.VolumeSourceField)
                         transactionVolume = GetFieldValue("Transaction", Settings.VolumeSourceField)
                     end
                     return transactionBibId, transactionVolume
@@ -1041,12 +1046,7 @@ function HandleRequests ()
             Log:DebugFormat("BibID : {0}", transactionBibId)
             Log:DebugFormat("Volume: {0}", transactionVolume)
             Log:Info("Searching for Sierra records.")
-            local sierraRecords
-            if Settings.ExactSearch then
-                sierraRecords = sierraApi:QueryItems(transactionBibId, transactionVolume)
-            else
-                sierraRecords = sierraApi:GetItems(transactionBibId, transactionVolume)
-            end
+            local sierraRecords = sierraApi:GetItems(transactionBibId, transactionVolume, Settings.ExactSearch)
             local numRecords = table.getn(sierraRecords)
 
 
@@ -1069,8 +1069,8 @@ function HandleRequests ()
                     transactionVolume:sub(volEndIndex + 1)
 
                 Log:DebugFormat(
-                    "Cleaning up VolumeSourceField. (Before: \"{0}\") (After: \"{1}\")", 
-                    transactionVolume, 
+                    "Cleaning up VolumeSourceField. (Before: \"{0}\") (After: \"{1}\")",
+                    transactionVolume,
                     nextTransactionVol)
 
                 SetFieldValue("Transaction", Settings.VolumeSourceField, nextTransactionVol);

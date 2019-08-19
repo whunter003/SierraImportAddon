@@ -70,6 +70,23 @@ Specifies the transaction field where gathered barcode information should be sto
 
 *Default*: `ItemEdition`
 
+### ReplaceVolumeWhenNotNull
+
+Determines if the specified volume destination field is replaced if here is already set information in the field.
+
+*Default*: `false`
+
+### ExactSearch
+
+Determines whether searching is exact (i.e., looks for an exact string match). If set to false, searching would rather rely on substring matching.
+
+*Default*: `true`
+
+### CallNumberFieldRegularExpression
+
+A regular expression for parsing the call number field for volume information. If set to nothing, full string of field is used.
+
+*Default*: `([B,b]ox\s*\d+)`
 
 ## Workflow Summary
 
