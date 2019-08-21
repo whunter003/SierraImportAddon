@@ -61,7 +61,7 @@
     </Setting>
 
     <Setting name="ExactSearch" type="boolean" value="false">
-      <Description>Determines whether searching is exact (i.e., looks for an exact string match). If set to false, searching would rather rely on substring matching</Description>
+      <Description>Determines how the addon compares volume information between the Transaction record and the record(s) from the Sierra API. If this is set to true, the addon will perform an exact comparison between the 2 volume fields. If set to false, the addon will search for the volume information from the Sierra API, within the volume information from the Transaction record.</Description>
     </Setting>
 
     <Setting name="VolumeSourceFieldRegularExpression" type="string" value="([B,b]ox\s*\d+)">
