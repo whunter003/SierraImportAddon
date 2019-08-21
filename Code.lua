@@ -188,7 +188,6 @@ SierraApi.Types["StreamReader"] = luanet.import_type("System.IO.StreamReader");
 
 SierraApi.UrlSuffixes = {}
 SierraApi.UrlSuffixes.Token = "/token"
-SierraApi.UrlSuffixes.ItemsQuery = "/items/query?offset=0&limit=20"
 SierraApi.UrlSuffixes.ItemsQueryItemFields = "?fields=default,fixedFields,varFields"
 SierraApi.UrlSuffixes.ItemsBibIds = "/items?bibIds=%s&fields=default,fixedFields,varFields"
 
@@ -434,109 +433,7 @@ function SierraApi:GetItems (bibId, volume, exact)
     return matchingItems
 end
 
-
-function SierraApi:QueryItems (bibId, volume)
-    --[[
-        Uses Sierra's /items/query API to get all of
-        the items that match the specified bibId
-        and volume.
-
-        Requires a bibId and a volume.
-    ]]
-
-    if (not type(bibId) == "string") or bibId == "" then 
-        error({ Message = "bibId must be a non-empty string" })
-
-    elseif (not type(volume) == "string") or volume == "" then
-        error({ Message = "volume must be non-empty string" })
-
-    end
-
-    SierraApi.Log:Info("Querying for Items")
-    SierraApi.Log:DebugFormat(
-        "SierraApi:QueryItems(bibId: \"{0}\", volume: \"{1}\")", 
-        bibId,
-        volume)
-
-    local queryUrl = self.ApiUrl .. SierraApi.UrlSuffixes.ItemsQuery
-    local uploadMethod = "POST"
-
-    local uploadBody = table.concat({
-        '{',
-            '"queries":[',
-                '{',
-                    '"target":{"record":{"type":"item"},"field":{"id":"81"}},',
-                    '"expr":{"op":"has","operands":["%s"]}',
-                '},',
-                '"and",',
-                '{',
-                    '"target":{"record":{"type":"item"},"field":{"tag":"v"}},',
-                    '"expr":{"op":"equals","operands":["%s"]}',
-                '}',
-            ']',
-        '}'
-    })
-    uploadBody = string.format(uploadBody, bibId, volume)    
-    SierraApi.Log:DebugFormat("Item Query: {0}", uploadBody)
-
-
-    -- Wrapped API call in a pcall
-    local queryUploadSuccess, queryUploadResult = pcall(function()
-        local webClient = self:BuildItemsWebClient()
-        SierraApi.Log:DebugFormat("Uploading query to: {0}", queryUrl)
-        return webClient:UploadString(queryUrl, uploadMethod, uploadBody)
-    end)
-
-    if not queryUploadSuccess then
-        SierraApi.Log:Error("Unsuccessful Query API call")
-        SierraApi:HandleUploadError(queryUploadResult, SierraApi.ApiEndpoints.itemsQuery)
-    end
-
-    SierraApi.Log:DebugFormat("Response: {0}", queryUploadResult)
-    local queryResponse = JsonParser:ParseJSON(queryUploadResult)
-
-    SierraApi.Log:DebugFormat(
-        "Number of entries: {0}", 
-        queryResponse.total or 
-        table.getn(queryResponse.entries) or 
-        -1)
-
-    matchingItems = {}
-
-    -- Adds each entry to the matchingItems output
-    for entryNum, entry in ipairs(queryResponse.entries or {}) do
-
-        if (not type(entry.link) == "string") or (entry.link == "") then
-            SierraApi.Log:WarnFormat("No link found for response entry number {0}.", entryNum)
-        else
-            local link = entry.link
-            link = link .. SierraApi.UrlSuffixes.ItemsQueryItemFields
-
-            SierraApi.Log:DebugFormat("Calling Items API: {0}", link)
-
-            local itemsApiSuccess, itemsApiResult = pcall(function()
-                local webClient = self:BuildItemsWebClient()
-                return webClient:DownloadString(link)
-            end)
-
-            if not itemsApiSuccess then
-                SierraApi.Log:ErrorFormat("Unsuccessful Items API call using URL: {0}", link)
-                SierraApi:HandleUploadError(itemsApiResult, SierraApi.ApiEndpoints.items)
-            end
-
-            SierraApi.Log:DebugFormat("Items API Response: {0}", itemsApiResult)
-            local parsedItemsResult = JsonParser:ParseJSON(itemsApiResult)
-            table.insert(matchingItems, parsedItemsResult)
-        end
-    end
-
-    if table.getn(matchingItems) <= 0 then
-        SierraApi.Log:Warn("No Sierra items found for the specified bibId and volume.")
-    end
-
-    return matchingItems
-end
-
+-- Note: Queryitems function removed after determining issues with working with the items/query endpoint
 
 function SierraApi:GetVarFieldValue (itemRecord, varField, subField)
     --[[
@@ -1046,9 +943,8 @@ function HandleRequests ()
             Log:DebugFormat("BibID : {0}", transactionBibId)
             Log:DebugFormat("Volume: {0}", transactionVolume)
             Log:Info("Searching for Sierra records.")
-            local sierraRecords = sierraApi:GetItems(transactionBibId, transactionVolume, Settings.ExactSearch)
-            local numRecords = table.getn(sierraRecords)
 
+            local sierraRecords = sierraApi:GetItems(transactionBibId, transactionVolume, Settings.ExactSearch)
 
             if numRecords <= 0 then
                 error({ Message = "No Sierra records were returned for the specified bibId and volume" })
