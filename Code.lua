@@ -421,8 +421,6 @@ function SierraApi:GetItems (bibId, volume, exact)
     return matchingItems
 end
 
--- Note: Queryitems function removed after determining issues with working with the items/query endpoint
-
 function SierraApi:GetVarFieldValue (itemRecord, varField, subField)
     --[[
         Gets the value of a particular varField
