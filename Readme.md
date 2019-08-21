@@ -86,7 +86,7 @@ Determines if the Transaction field specified by the `VolumeDestinationField` se
 
 ### ExactSearch
 
-Determines whether searching is exact (i.e., looks for an exact string match). If set to false, searching would rather rely on substring matching.
+Determines how the addon compares volume information between the Transaction record and the record(s) from the Sierra API. If this is set to true, the addon will perform an exact comparison between the 2 volume fields. If set to false, the addon will search for the volume information from the Sierra API, within the volume information from the Transaction record.
 
 *Default*: `true`
 
@@ -94,7 +94,7 @@ Determines whether searching is exact (i.e., looks for an exact string match). I
 
 A regular expression for parsing the volume from the field specified in the VolumeSourceField setting. The matched result will be used instead of the value from the VolumeSourceField, whenever volume information is compared. If this is set to blank, the actual value from the VolumeSourceField will be used.
 
-*EXAMPLE*: `([B,b]ox\s*\d+)` will  parse all box numbers only
+*EXAMPLE*: `([B,b]ox\s*\d+)` will parse all box numbers only
 
 ## Workflow Summary
 
