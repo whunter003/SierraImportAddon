@@ -341,17 +341,6 @@ function SierraApi:GetAccessTokenResponse (clientKey, clientSecret)
     return parsedAuthResult 
 end
 
-function SierraApi:GetItems (bibId, volume)
-        --[[
-        Uses Sierra's /items API to get all of
-        the items that match the specified bibId 
-        and volume.
-
-        Requires a bibId, and a volume.
-        ]]
-    return SierraApi:GetItems (bibId, volume, false)
-end
-
 function SierraApi:GetItems (bibId, volume, exact)
     --[[
         Uses Sierra's /items API to get all of
@@ -380,7 +369,6 @@ function SierraApi:GetItems (bibId, volume, exact)
         error({ Message = "volume must be a non-empty string" })
 
     end
-
 
     SierraApi.Log:Info("Getting Items using Sierra Items API")
     SierraApi.Log:DebugFormat("Item bibId : \"{0}\"", bibId)
@@ -675,10 +663,6 @@ function SierraApi:HandleUploadError (returnedError, apiEndpoint)
 
                         elseif apiEndpoint == SierraApi.ApiEndpoints.items then
                             errorMessageOpener = "A call to the Sierra /items API returned an error."
-
-                        elseif apiEndpoint == SierraApi.ApiEndpoints.itemsQuery then
-                            errorMessageOpener = "A call to the Sierra /items/query API returned an error."
-
                         end
 
                         SierraApi:HandleSierraApiError(errorMessageOpener, responseString)
@@ -809,7 +793,7 @@ Settings.CleanUpVolumeSourceField = GetSetting("CleanUpVolumeSourceField")
 Settings.VolumeDestinationField = GetSetting("VolumeDestinationField")
 Settings.BarcodeDestinationField = GetSetting("BarcodeDestinationField")
 
-Settings.CallNumberFieldRegularExpression = GetSetting("CallNumberFieldRegularExpression")
+Settings.VolumeSourceFieldRegularExpression = GetSetting("VolumeSourceFieldRegularExpression")
 Settings.ExactSearch = GetSetting("ExactSearch")
 Settings.ReplaceVolumeWhenNotNull = GetSetting("ReplaceVolumeWhenNotNull")
 
@@ -906,9 +890,9 @@ function HandleRequests ()
     Log:DebugFormat("Found transaction number {0} in \"{1}\"", tn, Settings.RequestMonitorQueue)
 
     local regex
-    if Settings.CallNumberFieldRegularExpression and Settings.CallNumberFieldRegularExpression ~= "" then
-        regex = Types["Regex"](Settings.CallNumberFieldRegularExpression)
-        Log:DebugFormat("Found Regex \"{0}\" for VolumeSourceField.", Settings.CallNumberFieldRegularExpression)
+    if Settings.VolumeSourceFieldRegularExpressionn and Settings.VolumeSourceFieldRegularExpression ~= "" then
+        regex = Types["Regex"](Settings.VolumeSourceFieldRegularExpression)
+        Log:DebugFormat("Found Regex \"{0}\" for VolumeSourceField.", Settings.VolumeSourceFieldRegularExpression)
     else
         Log:Debug("No Regex found.")
     end
@@ -922,9 +906,10 @@ function HandleRequests ()
                     transactionBibId = transactionBibId:gsub("%D", "")
                     local transactionVolume
                     if regex ~= nil then
-                        Log:DebugFormat("Using Regex \"{0}\" for volume source field {1}", Settings.CallNumberFieldRegularExpression, Settings.VolumeSourceField)
                         match = regex:Match(GetFieldValue("Transaction", Settings.VolumeSourceField))
                             if match.Success then
+                                Log:DebugFormat("Using Regex for volume source field {0} results in match \"{1}\"",
+                                    Settings.VolumeSourceField, match.Value)
                                 transactionVolume = match.Value
                             end
                     else
@@ -945,6 +930,7 @@ function HandleRequests ()
             Log:Info("Searching for Sierra records.")
 
             local sierraRecords = sierraApi:GetItems(transactionBibId, transactionVolume, Settings.ExactSearch)
+            local numRecords = table.getn(sierraRecords)
 
             if numRecords <= 0 then
                 error({ Message = "No Sierra records were returned for the specified bibId and volume" })
@@ -973,16 +959,13 @@ function HandleRequests ()
                 SaveDataSource("Transaction")
             end
 
-            local currentVolumeDestinationField = GetFieldValue("Transaction", Settings.BibIdSourceField)
-
-            if Settings.VolumeDestinationField
-                and Settings.VolumeDestinationField ~= ""
-                and (Settings.ReplaceVolumeWhenNotNull or (currentVolumeDestinationField and currentVolumeDestinationField ~= ""))
-                then
-                Log:Debug("Populating volume destination field")
-
-                SetFieldValue("Transaction", Settings.VolumeDestinationField, sierraRecordVolume)
-                SaveDataSource("Transaction")
+            if Settings.VolumeDestinationField and Settings.VolumeDestinationField ~= "" then
+                local currentVolumeDestinationField = GetFieldValue("Transaction", Settings.VolumeDestinationField)
+                if (Settings.ReplaceVolumeWhenNotNull or (not currentVolumeDestinationField) or currentVolumeDestinationField == "")) then
+                    Log:Debug("Populating volume destination field")
+                    SetFieldValue("Transaction", Settings.VolumeDestinationField, sierraRecordVolume)
+                    SaveDataSource("Transaction")
+                end
             end
 
             if Settings.BarcodeDestinationField and Settings.BarcodeDestinationField ~= "" then

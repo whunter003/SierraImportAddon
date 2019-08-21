@@ -2,6 +2,14 @@
 
 This addon imports ILS data from Sierra's Items API for transactions that are in the specified data import queue. The transaction will be routed to one of 2 queues, depending on the success of the data import.
 
+## Changelog v 1.1.0
+
+- Added ability to parse volume information via regular expressions.
+- Added exact matching options on volume information.
+- Added option to not replace volume destination field if field is already filled.
+
+
+
 ## Settings
 
 ### RequestMonitorQueue
@@ -44,7 +52,7 @@ Specifies the User-Agent that is sent to Sierra with API requests. The value of 
 
 Specifies the transaction field that contains the Sierra record's BibID. This setting will be used along with the VolumeSourceField setting to gather item data from Sierra's item API. The value of this setting is required and must match the name of a column from the Transactions table.
 
-*Default*: `ItemInfo3`
+*Default*: `ItemNumber`
 
 ### VolumeSourceField
 
@@ -72,7 +80,7 @@ Specifies the transaction field where gathered barcode information should be sto
 
 ### ReplaceVolumeWhenNotNull
 
-Determines if the specified volume destination field is replaced if there is already set information in the field.
+Determines if the Transaction field specified by the `VolumeDestinationField` setting is changed in cases where the field already has a value.
 
 *Default*: `false`
 
@@ -82,11 +90,11 @@ Determines whether searching is exact (i.e., looks for an exact string match). I
 
 *Default*: `true`
 
-### CallNumberFieldRegularExpression
+### VolumeSourceFieldRegularExpression
 
-A regular expression for parsing the call number field for volume information. If set to nothing, full string of field is used.
+A regular expression for parsing the volume from the field specified in the VolumeSourceField setting. The matched result will be used instead of the value from the VolumeSourceField, whenever volume information is compared. If this is set to blank, the actual value from the VolumeSourceField will be used.
 
-*Default*: `([B,b]ox\s*\d+)`
+*EXAMPLE*: `([B,b]ox\s*\d+)` will  parse all box numbers only
 
 ## Workflow Summary
 

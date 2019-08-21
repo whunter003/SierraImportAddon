@@ -1,7 +1,7 @@
 <Configuration>
   <Name>Sierra ILS Data Import Server Addon</Name>
   <Author>Atlas Systems, Inc.</Author>
-  <Version>2.0.0</Version>
+  <Version>1.1.0</Version>
   <Active>true</Active>
   <Type>Server</Type>
 
@@ -56,20 +56,20 @@
       <Description>Specifies the transaction field where gathered barcode information should be stored. The value of this setting is optional. If specified, the value of this setting must match the name of a column from the Transactions table.</Description>
     </Setting>
 
-    <Setting name="ReplaceVolumeWhenNotNull" type="boolean" value="false">
-      <Description>Determines if the specified volume destination field is replaced if here is already set information in the field.</Description>
+    <Setting name="ReplaceVolumeWhenNotNull" type="boolean" value="true">
+      <Description>Determines if the Transaction field specified by the VolumeDestinationField setting is changed in cases where the field already has a value.</Description>
     </Setting>
 
-    <Setting name="ExactSearch" type="boolean" value="true">
+    <Setting name="ExactSearch" type="boolean" value="false">
       <Description>Determines whether searching is exact (i.e., looks for an exact string match). If set to false, searching would rather rely on substring matching</Description>
     </Setting>
 
-    <Setting name="CallNumberFieldRegularExpression" type="string" value="([B,b]ox\s*\d+)">
-      <Description>A regular expression for parsing the call number field for volume information. If set to nothing, full string of field is used.</Description>
+    <Setting name="VolumeSourceFieldRegularExpression" type="string" value="([B,b]ox\s*\d+)">
+      <Description>A regular expression for parsing the volume from the field specified in the VolumeSourceField setting. The matched result will be used instead of the value from the VolumeSourceField, whenever volume information is compared. If this is set to blank, the actual value from the VolumeSourceField will be used.</Description>
     </Setting>
   </Settings>
   <Files>
-    <File>code.lua</File>
+    <File>Code.lua</File>
   </Files>
 
 </Configuration>
