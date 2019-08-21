@@ -959,7 +959,7 @@ function HandleRequests ()
 
             if Settings.VolumeDestinationField and Settings.VolumeDestinationField ~= "" then
                 local currentVolumeDestinationField = GetFieldValue("Transaction", Settings.VolumeDestinationField)
-                if (Settings.ReplaceVolumeWhenNotNull or (not currentVolumeDestinationField) or currentVolumeDestinationField == "")) then
+                if (Settings.ReplaceVolumeWhenNotNull or (not currentVolumeDestinationField) or currentVolumeDestinationField == "") then
                     Log:Debug("Populating volume destination field")
                     SetFieldValue("Transaction", Settings.VolumeDestinationField, sierraRecordVolume)
                     SaveDataSource("Transaction")
