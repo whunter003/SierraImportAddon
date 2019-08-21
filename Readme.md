@@ -82,13 +82,13 @@ Specifies the transaction field where gathered barcode information should be sto
 
 Determines if the Transaction field specified by the `VolumeDestinationField` setting is changed in cases where the field already has a value.
 
-*Default*: `false`
+*Default*: `true`
 
 ### ExactSearch
 
 Determines how the addon compares volume information between the Transaction record and the record(s) from the Sierra API. If this is set to true, the addon will perform an exact comparison between the 2 volume fields. If set to false, the addon will search for the volume information from the Sierra API, within the volume information from the Transaction record.
 
-*Default*: `true`
+*Default*: `false`
 
 ### VolumeSourceFieldRegularExpression
 
