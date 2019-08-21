@@ -72,7 +72,7 @@ Specifies the transaction field where gathered barcode information should be sto
 
 ### ReplaceVolumeWhenNotNull
 
-Determines if the specified volume destination field is replaced if here is already set information in the field.
+Determines if the specified volume destination field is replaced if there is already set information in the field.
 
 *Default*: `false`
 
