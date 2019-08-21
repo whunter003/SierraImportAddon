@@ -2,13 +2,13 @@
 
 This addon imports ILS data from Sierra's Items API for transactions that are in the specified data import queue. The transaction will be routed to one of 2 queues, depending on the success of the data import.
 
-## Changelog v 1.1.0
+## Changelog
 
-- Added ability to parse volume information via regular expressions.
-- Added exact matching options on volume information.
-- Added option to not replace volume destination field if field is already filled.
-
-
+- `v1.1.0`
+  - Added ability to parse volume information via regular expressions.
+  - Added exact matching options on volume information.
+  - Added option to not replace volume destination field if field is already filled.
+  - Removed unused functionality related to the query endpoint of the Sierra API.
 
 ## Settings
 
